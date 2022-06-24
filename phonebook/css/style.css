@@ -48,6 +48,20 @@ body {
 }
 
 
+.edit {
+  background-color: transparent;
+  border: none;
+}
+
+.edit:hover {
+  opacity: .7;
+}
+
+.edit img {
+  display: block;
+}
+
+
 
 .form {
   padding: 30px 50px;

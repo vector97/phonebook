@@ -92,6 +92,7 @@ const data = [
                 <th>Имя</th>
                 <th>Фамилия</th>
                 <th>Телефон</th>
+                <th></th>
             </tr>
         `);
 
@@ -175,7 +176,7 @@ const data = [
     const main = createMain();
     const buttonGroup = createButtonsGroup([
       {
-        className: 'btn btn-primary mr-3',
+        className: 'btn btn-primary mr-3 js-add',
         type: 'button',
         text: 'Добавить',
       },
@@ -197,6 +198,10 @@ const data = [
 
     return {
       list: table.tbody,
+      logo,
+      btnAdd: buttonGroup.btns[0],
+      formOverlay: form.overlay,
+      form: form.form,
     };
   };
 
@@ -219,9 +224,17 @@ const data = [
     const phoneLink = document.createElement('a');
     phoneLink.href = `tel:${phone}`;
     phoneLink.textContent = phone;
+    tr.phoneLink = phoneLink;
     tdPhone.append(phoneLink);
 
-    tr.append(tdDel, tdName, tdSurname, tdPhone);
+    const tdEdit = document.createElement('td');
+    tdEdit.insertAdjacentHTML('afterbegin', `
+      <button class="edit" type="button">
+        <img src="https://cdn-icons.flaticon.com/png/512/2356/premium/2356780.png?token=exp=1656079766~hmac=8e378cbfd17266f7237526e34c328919" alt="Редактировать" width="20">
+      </button>
+    `);
+
+    tr.append(tdDel, tdName, tdSurname, tdPhone, tdEdit);
 
     return tr;
   };
@@ -229,16 +242,45 @@ const data = [
   const renderContacts = (elem, data) => {
     const allRow = data.map(createRow);
     elem.append(...allRow);
+
+    return allRow;
+  };
+
+  const hoverRow = (allRow, logo) => {
+    const text = logo.textContent;
+
+    allRow.forEach(contact => {
+      contact.addEventListener('mouseenter', () => {
+        logo.textContent = contact.phoneLink.textContent;
+      });
+
+      contact.addEventListener('mouseleave', () => {
+        logo.textContent = text;
+      });
+    });
   };
 
   const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
     const phonebook = renderPhonebook(app, title);
 
-    const {list} = phonebook;
+    const {list, logo, btnAdd, formOverlay, form} = phonebook;
 
-    renderContacts(list, data);
-  //  функционал
+    //  функционал
+
+    const allRow = renderContacts(list, data);
+
+    hoverRow(allRow, logo);
+
+    btnAdd.addEventListener('click', () => {
+      formOverlay.classList.add('is-visible');
+    });
+
+    formOverlay.addEventListener('click', (e) => {
+      if (!e.target.closest('.form') || e.target.classList.contains('close')) {
+        formOverlay.classList.remove('is-visible');
+      }
+    });
   };
 
   window.phoneBookInit = init;
