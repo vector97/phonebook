@@ -1,34 +1,29 @@
 'use strict';
 
-const data = [
-  {
-    name: 'Иван',
-    surname: 'Петров',
-    phone: '+79514545454',
-  },
-  {
-    name: 'Игорь',
-    surname: 'Семёнов',
-    phone: '+79999999999',
-  },
-  {
-    name: 'Семён',
-    surname: 'Иванов',
-    phone: '+79800252525',
-  },
-  {
-    name: 'Мария',
-    surname: 'Попова',
-    phone: '+79876543210',
-  },
-];
+// const data = [
+//   {
+//     name: 'Иван',
+//     surname: 'Петров',
+//     phone: '+79514545454',
+//   },
+//   {
+//     name: 'Игорь',
+//     surname: 'Семёнов',
+//     phone: '+79999999999',
+//   },
+//   {
+//     name: 'Семён',
+//     surname: 'Иванов',
+//     phone: '+79800252525',
+//   },
+//   {
+//     name: 'Мария',
+//     surname: 'Попова',
+//     phone: '+79876543210',
+//   },
+// ];
 
 {
-  const addContactData = (contact) => {
-    data.push(contact);
-    console.log('data: ', data);
-  };
-
   const createContainer = () => {
     const container = document.createElement('div');
     container.classList.add('container');
@@ -96,7 +91,7 @@ const data = [
                 <th class="delete">Удалить</th>
                 <th data-header="name">Имя</th>
                 <th data-header="surname">Фамилия</th>
-                <th>Телефон</th>
+                <th data-header="phone">Телефон</th>
                 <th>Редактировать</th>
             </tr>
         `);
@@ -233,7 +228,9 @@ const data = [
     const phoneLink = document.createElement('a');
     phoneLink.href = `tel:${phone}`;
     phoneLink.textContent = phone;
+    phoneLink.dataset.phone = phoneLink.innerText;
     tr.phoneLink = phoneLink;
+    tdPhone.dataset.body = 'phone';
     tdPhone.append(phoneLink);
 
     const tdEdit = document.createElement('td');
@@ -304,13 +301,41 @@ const data = [
       const target = e.target;
 
       if (target.closest('.del-icon')) {
-        target.closest('.contact').remove();
+        const deletedContact = target.closest('.contact');
+        const contactNumber = deletedContact.querySelector('[data-phone]').innerText;
+        deletedContact.remove();
+        removeStorage('contacts', contactNumber);
       }
     });
   };
 
   const addContactPage = (contact, list) => {
     list.append(createRow(contact));
+  };
+
+  // получение контактов из хранилища
+  const getStorage = (contacts) => {
+    const allContacts = JSON.parse(localStorage.getItem(contacts)) || [];
+
+    return allContacts;
+  };
+
+  // запись новых контактов в хранилище
+  const setStorage = (contacts, newContact) => {
+    const allContacts = getStorage(contacts);
+    allContacts.push(newContact);
+    localStorage.setItem(contacts, JSON.stringify(allContacts));
+  };
+
+  // удаление контакта из хранилища по заданному номеру
+  const removeStorage = (contacts, deletedContactNumber) => {
+    let allContacts = getStorage(contacts);
+    allContacts = allContacts.filter(contact => contact.phone !== deletedContactNumber);
+    localStorage.setItem(contacts, JSON.stringify(allContacts));
+  };
+
+  const addContactData = (contact) => {
+    setStorage('contacts', contact);
   };
 
   const formControl = (form, list, closeModal) => {
@@ -341,7 +366,9 @@ const data = [
 
     //  функционал
 
-    const allRow = renderContacts(list, data);
+    const allContacts = getStorage('contacts');
+
+    const allRow = renderContacts(list, allContacts);
     const { closeModal } = modalControl(btnAdd, overlay);
 
     hoverRow(allRow, logo);
@@ -352,16 +379,24 @@ const data = [
       return (a, b) => a[field] > b[field] ? 1 : -1;
     };
 
+    // сортировка данных при загрузке
+    const sortingData = (sortingType) => {
+      localStorage.setItem('sortingType', sortingType);
+      allContacts.sort(sortContacts(sortingType));
+      list.querySelectorAll('.contact').forEach(contact => contact.remove());
+      renderContacts(list, allContacts);
+    };
+
+    sortingData(localStorage.getItem('sortingType'));
+
     const headerTable = document.querySelector('thead');
 
     headerTable.addEventListener('click', e => {
       const target = e.target;
 
-      if (target.dataset) {
-        data.sort(sortContacts(target.dataset.header))
-        console.log(target.dataset.header)
-        list.querySelectorAll('.contact').forEach(contact => contact.remove());
-        renderContacts(list, data);
+      if (target.dataset.header) {
+        const sortingType = target.dataset.header;
+        sortingData(sortingType);
       }
     });
   };
