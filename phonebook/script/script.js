@@ -5,7 +5,7 @@ import {
   formControl,
 } from './modules/control.js';
 
-import * as render from './modules/render.js';
+import render from './modules/render.js';
 
 import { getStorage } from './modules/serviceStorage.js';
 
